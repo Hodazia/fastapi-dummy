@@ -1,9 +1,11 @@
 from fastapi import FastAPI
-from routes.router import api_router
+from routes.health import health_router
+from routes.user_router import api_router
 import uvicorn
 
 app = FastAPI()
 app.include_router(api_router)
+app.include_router(health_router)
 
 
 def main():
