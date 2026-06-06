@@ -5,7 +5,7 @@ from models.user import UserCreate, UserResponse, UserUpdate
 from Service.user_service import get_all_users, get_user_by_id, create_user,update_user, delete_user
 
 api_router =  APIRouter(
-    prefix="/users",
+    prefix="/people", # it was users have updated to /people
     tags=["users"]
 )
 
