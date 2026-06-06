@@ -7,7 +7,6 @@ Define pydantic models for task creation, updation and response
 class TaskCreate(BaseModel):
     title: str
     description: str | None = None
-    owner_id: int
 
 
 class TaskUpdate(BaseModel):

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from routes.health import health_router
 from routes.user_router import api_router
 from routes.user.user_routes import router
+from routes.task.task_routes import router as task_router
 import uvicorn
 import os
 from dotenv import load_dotenv
@@ -14,6 +15,7 @@ app = FastAPI()
 app.include_router(api_router)
 app.include_router(health_router)
 app.include_router(router)
+app.include_router(task_router)
 
 
 def main():
