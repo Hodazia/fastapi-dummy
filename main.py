@@ -16,10 +16,11 @@ app.include_router(api_router)
 app.include_router(health_router)
 app.include_router(router)
 app.include_router(task_router)
+# i have changed the port=8002 for development , since the port 8000 is in use by production EC2 server
 
 
 def main():
-    # i have changed the port=8002 for development , since the port 8000 is in use by production EC2 server
+    
     uvicorn.run(app, host="0.0.0.0", port=int(DEV_PORT))
 
 
