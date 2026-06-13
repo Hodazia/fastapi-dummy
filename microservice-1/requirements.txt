@@ -1,2 +1,5 @@
 uvicorn
 fastapi
+gunicorn
+python_dotenv
+
