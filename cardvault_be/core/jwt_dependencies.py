@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from database.dependencies import get_db
-from database.models import ClientUser
+from database.models import User
 from core.security import decode_access_token
 
 '''
@@ -30,7 +30,7 @@ token
 
 '''
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/user/login"
+    tokenUrl="/users/login"
 )
 
 '''
@@ -43,7 +43,7 @@ Given the JWT from the request, figure out which user is making the request.
 def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
-) -> ClientUser:
+) -> User:
 
     # if jwt is invalid, we will raise this exception and the client will get a 401 Unauthorized response
     credentials_exception = HTTPException(
@@ -68,7 +68,7 @@ def get_current_user(
     except (Exception, ValueError):
         raise credentials_exception
 
-    user = db.get(ClientUser, user_id)
+    user = db.get(User, user_id)
 
     if user is None:
         raise credentials_exception

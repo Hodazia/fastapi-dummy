@@ -1,13 +1,14 @@
 from datetime import datetime , timedelta, timezone 
+import os
 import jwt
  
 from pwdlib import PasswordHash
 
-SECRET_KEY = "CHANGE_THIS_IN_PRODUCTION"
+SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_IN_PRODUCTION________")
 
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 2
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 password_hash = PasswordHash.recommended()

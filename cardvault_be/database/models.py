@@ -49,6 +49,11 @@ class User(Base):
         String(255),
         nullable=False
     )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
     # a user can have many Contents and hence there is a list
     contents: Mapped[list["Content"]] = relationship(
         back_populates="user"
