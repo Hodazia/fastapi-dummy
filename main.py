@@ -3,6 +3,7 @@ from routes.health import health_router
 from routes.user_router import api_router
 from routes.user.user_routes import router
 from routes.task.task_routes import router as task_router
+from routes.client_user.cl_user_route import router as client_user_router
 import uvicorn
 import os
 from dotenv import load_dotenv
@@ -16,6 +17,7 @@ app.include_router(api_router)
 app.include_router(health_router)
 app.include_router(router)
 app.include_router(task_router)
+app.include_router(client_user_router)
 # i have changed the port=8002 for development , since the port 8000 is in use by production EC2 server
 
 
