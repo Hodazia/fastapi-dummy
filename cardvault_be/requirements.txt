@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic
+sqlalchemy
+psycopg
+pwdlib
+PyJWT
+python-multipart
