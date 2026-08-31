@@ -3,7 +3,9 @@ uvicorn
 python-dotenv
 pydantic
 sqlalchemy
-psycopg
+psycopg[binary]
 pwdlib
 PyJWT
 python-multipart
+celery
+redis
