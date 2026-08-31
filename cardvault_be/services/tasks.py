@@ -10,3 +10,10 @@ def add_numbers(a:int, b:int):
     result = a+b 
     print(f"Result = {result}")
     return result
+
+@celery_app.task
+def print_message():
+
+    print("Hello from scheduled Celery task!")
+
+    return "Hello!"

@@ -35,6 +35,17 @@ def add():
 @app.get("/tasks/{task_id}")
 def get_task_status(task_id: str):
 
+    # it returns an object containing th task ID
+    '''
+    Task ID
+   |
+   v
+    Redis
+    |
+    ├── PENDING
+    ├── STARTED
+    └── SUCCESS → 30
+    '''
     task = AsyncResult(
         task_id,
         app=celery_app

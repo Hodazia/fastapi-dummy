@@ -5,3 +5,13 @@
 - Terminal 2: docker run -p 6379:6379 --redis
 - Terminal 3: uv run celery -A services.celery_app worker --loglevel=info
 
+u can dockerize the entire project as well  
+Docker Compose
+│
+├── redis
+│
+├── api
+│
+├── worker
+│
+└── beat
