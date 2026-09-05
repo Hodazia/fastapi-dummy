@@ -1,0 +1,10 @@
+.env
+__pycache__
+*.pyc
+.venv
+.git
+celerybeat-schedule*
+*.db
+README.md
+DEPLOY.md
+deploy/

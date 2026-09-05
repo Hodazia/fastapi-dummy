@@ -1,10 +1,12 @@
 fastapi
 uvicorn
+gunicorn
 python-dotenv
 pydantic
+pydantic-settings
 sqlalchemy
 psycopg[binary]
-pwdlib
+pwdlib[argon2]
 PyJWT
 python-multipart
 celery

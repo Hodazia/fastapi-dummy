@@ -1,17 +1,18 @@
-from datetime import datetime , timedelta, timezone 
-import os
+from datetime import datetime, timedelta, timezone
+
 import jwt
- 
 from pwdlib import PasswordHash
 
-SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_IN_PRODUCTION________")
+from core.settings import get_settings
 
+settings = get_settings()
+
+SECRET_KEY = settings.secret_key
 ALGORITHM = "HS256"
-
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 password_hash = PasswordHash.recommended()
+
 
 def hash_password(password: str) -> str:
     return password_hash.hash(password)

@@ -1,6 +1,4 @@
-from dotenv import load_dotenv
-import os
+from core.settings import get_settings
 
-load_dotenv()
-
-DB_URL = os.getenv("DATABASE_URL")
+settings = get_settings()
+DB_URL = settings.database_url

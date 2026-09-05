@@ -1,43 +1,51 @@
-import time
-from services.celery_app import celery_app
+import logging
 import random
+import time
 
-#"This function is a task that a Celery worker can execute."
+from services.celery_app import celery_app
+
+logger = logging.getLogger(__name__)
+
+
 @celery_app.task
-def add_numbers(a:int, b:int):
-    print(f"Adding {a} + {b}")
+def add_numbers(a: int, b: int):
+    logger.info("Adding %s + %s", a, b)
     time.sleep(10)
 
-    result = a+b 
-    print(f"Result = {result}")
+    result = a + b
+    logger.info("Result = %s", result)
     return result
+
 
 @celery_app.task
 def slow_task(seconds: int):
-    print(f"Starting slow task for {seconds} seconds")
+    logger.info("Starting slow task for %s seconds", seconds)
     time.sleep(seconds)
-    print("Slow task finished")
+    logger.info("Slow task finished")
     return f"Completed after {seconds} seconds"
+
 
 @celery_app.task
 def slow_task2(task_number: int):
-    print(f"START task {task_number}")
+    logger.info("START task %s", task_number)
 
     time.sleep(10)
 
-    print(f"END task {task_number}")
+    logger.info("END task %s", task_number)
 
     return f"Task {task_number} completed"
 
+
 @celery_app.task
 def multiply_numbers(a: int, b: int):
-    print(f"Multiplying {a} * {b}")
+    logger.info("Multiplying %s * %s", a, b)
     time.sleep(3)
     return a * b
 
+
 @celery_app.task
 def print_message():
-    print("Hello from scheduled Celery task!")
+    logger.info("Hello from scheduled Celery task!")
     return "Hello!"
 
 
@@ -48,13 +56,11 @@ def print_message():
     max_retries=3
 )
 def unreliable_task(self):
-    print("Running task")
+    logger.info("Running task")
 
     if random.random() < 0.7:
-        print("Task failed")
-        raise self.retry(
-            countdown=5
-        )
+        logger.warning("Task failed, retrying")
+        raise self.retry(countdown=5)
 
-    print("Task succeeded")
+    logger.info("Task succeeded")
     return "Success"

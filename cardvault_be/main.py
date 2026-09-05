@@ -1,30 +1,103 @@
-from fastapi import FastAPI
-import os 
+import logging
+from contextlib import asynccontextmanager
+
+import redis
 import uvicorn
-from dotenv import load_dotenv
-from routes.user.user_routes import router as userauth_router
-from routes.content.content_routes import router as content_router
-from services.tasks import add_numbers,multiply_numbers,slow_task, slow_task2,unreliable_task
-from services.celery_app import celery_app
 from celery.result import AsyncResult
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
-load_dotenv()
+from core.logging_config import setup_logging
+from core.settings import get_settings
+from database.start_db import engine, init_db
+from routes.content.content_routes import router as content_router
+from routes.user.user_routes import router as userauth_router
+from services.celery_app import celery_app
+from services.tasks import (
+    add_numbers,
+    multiply_numbers,
+    slow_task,
+    slow_task2,
+    unreliable_task,
+)
 
-app = FastAPI()
+settings = get_settings()
+setup_logging(settings.log_level)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting CardVault API (%s)", settings.environment)
+    init_db()
+    yield
+    logger.info("Shutting down CardVault API")
+
+
+app = FastAPI(
+    title="CardVault API",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(userauth_router)
 app.include_router(content_router)
+
 
 @app.get("/health")
 def get_health():
     return {
-        "status":"the server is healthy"
+        "status": "healthy",
+        "environment": settings.environment,
     }
+
+
+@app.get("/health/ready")
+def readiness_check():
+    checks = {
+        "database": "unknown",
+        "redis": "unknown",
+    }
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        checks["database"] = "ok"
+    except Exception as exc:
+        logger.exception("Database readiness check failed")
+        checks["database"] = str(exc)
+
+    try:
+        redis_client = redis.from_url(settings.celery_broker_url)
+        redis_client.ping()
+        checks["redis"] = "ok"
+    except Exception as exc:
+        logger.exception("Redis readiness check failed")
+        checks["redis"] = str(exc)
+
+    is_ready = all(value == "ok" for value in checks.values())
+    payload = {
+        "status": "ready" if is_ready else "degraded",
+        "checks": checks,
+    }
+
+    return JSONResponse(
+        status_code=200 if is_ready else 503,
+        content=payload,
+    )
 
 
 @app.post("/tasks/add")
 def add():
-
-    # it does not execute immediately , it puts add_numbers into the cleery queue
     task = add_numbers.delay(10, 20)
 
     return {
@@ -36,43 +109,24 @@ def add():
 @app.post("/tasks/slow")
 def slow():
     task = slow_task.delay(20)
-    '''
-    start your worker and call this endpoint
-    and then call it again 2 more times, u would have created 3 tasks
-    Redis contains tasks waiting to be processed.
-    The worker receives them.
-    
-    we will see like this,
-    Task slow_task[A] received
-    Task slow_task[B] received
-    Task slow_task[C] received
-
-    if your worker has concurrency of 4, then
-    Worker
-    │
-    ├── Process 1 → Task A
-    ├── Process 2 → Task B
-    ├── Process 3 → Task C
-    └── Process 4 → available
-
-    THINK ABOUT HOW TO ACHIEVE THIS!
-    '''
 
     return {
         "task_id": task.id,
         "message": "Slow task submitted"
     }
 
+
 @app.post("/tasks/multiply")
 def multiply():
     a = 10
     b = 20
-    task = multiply_numbers.delay(a,b)
+    task = multiply_numbers.delay(a, b)
 
     return {
         "task_id": task.id,
         "message": "Multiplication task submitted"
     }
+
 
 @app.post("/tasks/multiple")
 def multiple_tasks():
@@ -88,52 +142,40 @@ def multiple_tasks():
         ]
     }
 
+
 @app.post("/tasks/delayed")
 def delayed():
-
     task = add_numbers.apply_async(
         args=[10, 20],
         countdown=10
     )
-    # this tells that task will be in the redis for 10 seconds and then taken by the worker
 
     return {
         "task_id": task.id,
         "message": "Task will execute after 10 seconds"
     }
 
+
 @app.post("/tasks/unreliable")
 def unreliable():
-
     task = unreliable_task.delay()
 
     return {
         "task_id": task.id
     }
 
+
 @app.post("/tasks/{task_number}")
 def create_task(task_number: int):
-
     task = slow_task2.delay(task_number)
 
     return {
         "task_id": task.id
     }
 
+
 @app.get("/tasks/{task_id}")
 def get_task_status(task_id: str):
-
-    # it returns an object containing th task ID
-    '''
-    Task ID
-   |
-   v
-    Redis
-    |
-    ├── PENDING
-    ├── STARTED
-    └── SUCCESS → 30
-    '''
     task = AsyncResult(
         task_id,
         app=celery_app
@@ -145,9 +187,9 @@ def get_task_status(task_id: str):
         "result": task.result
     }
 
+
 @app.delete("/tasks/{task_id}")
 def cancel_task(task_id: str):
-
     celery_app.control.revoke(
         task_id,
         terminate=True
@@ -156,7 +198,7 @@ def cancel_task(task_id: str):
     return {
         "task_id": task_id,
         "message": "Task revoked"
-    }  
+    }
 
 
 def main():
