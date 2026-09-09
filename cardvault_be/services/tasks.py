@@ -43,10 +43,10 @@ def multiply_numbers(a: int, b: int):
     return a * b
 
 
-@celery_app.task
-def print_message():
-    logger.info("Hello from scheduled Celery task!")
-    return "Hello!"
+# @celery_app.task
+# def print_message():
+#     logger.info("Hello from scheduled Celery task!")
+#     return "Hello!"
 
 
 @celery_app.task(
